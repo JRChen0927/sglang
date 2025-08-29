@@ -33,63 +33,32 @@ SGLang调度器的设计基于三个核心理念：
 
 ### 核心组件架构
 
-```mermaid
-graph TD
-    A["🧠 SGLang Scheduler<br/>调度器核心"] 
-    
-    A --> B1["🧩 OutputProcessor<br/>输出处理"]
-    A --> B2["🔄 UpdateWeights<br/>权重更新"]
-    A --> B3["📊 Profiler<br/>性能分析"]
-    A --> B4["📈 Metrics<br/>指标收集"]
-    A --> B5["🔀 DisaggPrefill<br/>分离式预填充"]
-    A --> B6["🔁 DisaggDecode<br/>分离式解码"]
-    
-    A --> C1["⚡ Normal Loop<br/>标准循环"]
-    A --> C2["🔥 Overlap Loop<br/>重叠循环"]
-    A --> C3["🚀 Pipeline Loop<br/>流水线循环"]
-    A --> C4["🌊 Disagg Loops<br/>分离式循环"]
-    
-    A --> D1["📦 TypeBasedDispatcher<br/>类型分发器"]
-    A --> D2["📋 Request Queue<br/>请求队列"]
-    A --> D3["🎯 Batch Scheduler<br/>批次调度器"]
-    A --> D4["📤 Result Processor<br/>结果处理器"]
-    
-    A --> E1["💾 Memory Pools<br/>内存池"]
-    A --> E2["🗄️ KV Cache<br/>KV缓存"]
-    A --> E3["🌳 Prefix Cache<br/>前缀缓存"]
-    A --> E4["⚙️ Resource Allocator<br/>资源分配器"]
-    
-    A --> F1["🔗 Tensor Parallel<br/>张量并行"]
-    A --> F2["🔧 Pipeline Parallel<br/>流水线并行"]
-    A --> F3["📊 Data Parallel<br/>数据并行"]
-    A --> F4["🎭 Expert Parallel<br/>专家并行"]
-    
-    style A fill:#1e3a8a,color:#ffffff,stroke:#1e40af,stroke-width:3px
-    style B1 fill:#dbeafe,color:#000000,stroke:#3b82f6,stroke-width:2px
-    style B2 fill:#dbeafe,color:#000000,stroke:#3b82f6,stroke-width:2px
-    style B3 fill:#dbeafe,color:#000000,stroke:#3b82f6,stroke-width:2px
-    style B4 fill:#dbeafe,color:#000000,stroke:#3b82f6,stroke-width:2px
-    style B5 fill:#dbeafe,color:#000000,stroke:#3b82f6,stroke-width:2px
-    style B6 fill:#dbeafe,color:#000000,stroke:#3b82f6,stroke-width:2px
-    style C1 fill:#fef3c7,color:#000000,stroke:#f59e0b,stroke-width:2px
-    style C2 fill:#fef3c7,color:#000000,stroke:#f59e0b,stroke-width:2px
-    style C3 fill:#fef3c7,color:#000000,stroke:#f59e0b,stroke-width:2px
-    style C4 fill:#fef3c7,color:#000000,stroke:#f59e0b,stroke-width:2px
-    style D1 fill:#dcfce7,color:#000000,stroke:#22c55e,stroke-width:2px
-    style D2 fill:#dcfce7,color:#000000,stroke:#22c55e,stroke-width:2px
-    style D3 fill:#dcfce7,color:#000000,stroke:#22c55e,stroke-width:2px
-    style D4 fill:#dcfce7,color:#000000,stroke:#22c55e,stroke-width:2px
-    style E1 fill:#fce7f3,color:#000000,stroke:#ec4899,stroke-width:2px
-    style E2 fill:#fce7f3,color:#000000,stroke:#ec4899,stroke-width:2px
-    style E3 fill:#fce7f3,color:#000000,stroke:#ec4899,stroke-width:2px
-    style E4 fill:#fce7f3,color:#000000,stroke:#ec4899,stroke-width:2px
-    style F1 fill:#f3e8ff,color:#000000,stroke:#a855f7,stroke-width:2px
-    style F2 fill:#f3e8ff,color:#000000,stroke:#a855f7,stroke-width:2px
-    style F3 fill:#f3e8ff,color:#000000,stroke:#a855f7,stroke-width:2px
-    style F4 fill:#f3e8ff,color:#000000,stroke:#a855f7,stroke-width:2px
 ```
-
-**图示说明**：深蓝色核心表示SGLang调度器主体，浅蓝色表示Mixin模块化架构，黄色表示事件循环层，绿色表示请求处理层，粉色表示资源管理层，紫色表示并行协调层。
+┌─────────────────────────────────────────────────────────────┐
+│                    🧠 SGLang Scheduler                     │
+├─────────────────────────────────────────────────────────────┤
+│  🧩 Mixin 模块化架构                                        │
+│  ├── OutputProcessor    ├── UpdateWeights                  │
+│  ├── Profiler          ├── Metrics                        │
+│  ├── DisaggPrefill     └── DisaggDecode                   │
+├─────────────────────────────────────────────────────────────┤
+│  ⚡ 事件循环层                                               │
+│  ├── Normal Loop       ├── Overlap Loop                   │
+│  ├── Pipeline Loop     └── Disagg Loops                   │
+├─────────────────────────────────────────────────────────────┤
+│  📦 请求处理层                                               │
+│  ├── TypeBasedDispatcher  ├── Request Queue               │
+│  ├── Batch Scheduler      └── Result Processor            │
+├─────────────────────────────────────────────────────────────┤
+│  💾 资源管理层                                               │
+│  ├── Memory Pools      ├── KV Cache                       │
+│  ├── Prefix Cache      └── Resource Allocator             │
+├─────────────────────────────────────────────────────────────┤
+│  🌐 并行协调层                                               │
+│  ├── Tensor Parallel   ├── Pipeline Parallel              │
+│  ├── Data Parallel     └── Expert Parallel                │
+└─────────────────────────────────────────────────────────────┘
+```
 
 ### 关键设计特色
 
